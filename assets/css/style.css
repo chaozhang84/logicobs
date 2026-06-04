@@ -1,0 +1,290 @@
+/* ==========================================================================
+   1. 全局初始化与变量定义
+   ========================================================================== */
+:root {
+    --bg-color: #f8f9fa;       /* 浅色背景 */
+    --text-color: #212529;     /* 主文字颜色 */
+    --accent-color: #0070f3;   /* 科技蓝高亮色 */
+    --card-bg: #ffffff;        /* 卡片背景 */
+    --border-color: #e2e8f0;   /* 边框颜色 */
+    --max-width: 1000px;       /* 页面最大宽度 */
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    scroll-behavior: smooth; /* 锚点平滑滚动 */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+/* ==========================================================================
+   2. 布局组件
+   ========================================================================== */
+.section {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: 80px 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+h2 {
+    font-size: 2rem;
+    margin-bottom: 30px;
+    position: relative;
+}
+
+/* 导航栏 */
+.navbar {
+    position: sticky;
+    top: 0;
+    background-color: rgba(248, 249, 250, 0.8);
+    backdrop-filter: blur(10px); /* 现代毛玻璃效果 */
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 40px;
+    z-index: 100;
+}
+
+.navbar .logo {
+    font-weight: 700;
+    font-size: 1.2rem;
+    letter-spacing: 1px;
+}
+
+.navbar nav a {
+    color: var(--text-color);
+    text-decoration: none;
+    margin-left: 25px;
+    font-size: 0.95rem;
+    transition: color 0.2s ease;
+}
+
+.navbar nav a:hover, .navbar nav a.lang-switch {
+    color: var(--accent-color);
+    font-weight: 500;
+}
+
+/* 首屏 Welcome */
+.hero {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: 120px 20px 80px 20px;
+    text-align: center;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.hero h1 {
+    font-size: 3rem;
+    margin-bottom: 20px;
+    font-weight: 800;
+}
+
+.hero p {
+    font-size: 1.25rem;
+    color: #666;
+}
+
+/* 关于我 */
+.about-container {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+}
+
+/* 包裹头像和文字的超链接容器 */
+.avatar-link {
+    display: flex;
+    flex-direction: column;   /* 让头像和文字垂直排列 */
+    align-items: center;      /* 居中对齐 */
+    text-decoration: none;    /* 去掉超链接默认下划线 */
+    gap: 12px;                /* 头像和文字之间的间距 */
+    flex-shrink: 0;           /* 防止在大屏幕下被挤压 */
+}
+
+/* 头像基础样式 */
+.avatar {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* 升级为更优雅的贝塞尔曲线过渡 */
+}
+
+/* 常驻提示文字的基础样式 */
+.avatar-tip {
+    font-size: 0.85rem;       /* 稍微小一点的字号，显得精致不突兀 */
+    color: #888888;           /* 默认使用低调的灰色 */
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+/* ==========================================================================
+   联动交互效果：无论是鼠标移到头像上，还是移到文字上，都会同时触发整体高亮
+   ========================================================================== */
+.avatar-link:hover .avatar {
+    transform: scale(1.06);          /* 头像平滑放大 */
+    border-color: var(--accent-color);/* 边框变蓝 */
+    box-shadow: 0 8px 24px rgba(0, 112, 243, 0.15); /* 淡淡的蓝色光晕 */
+    filter: brightness(1.03);
+}
+
+.avatar-link:hover .avatar-tip {
+    color: var(--accent-color);      /* 提示文字无缝变成品牌蓝色，明确提示可点 */
+    transform: translateY(2px);      /* 文字轻微下移，产生灵动的微动效 */
+}
+
+/* 模拟按压点击反馈 */
+.avatar-link:active .avatar {
+    transform: scale(0.98);
+}
+/* 个人作品（网格布局） */
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+}
+
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 25px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+}
+
+.card h3 {
+    margin-bottom: 12px;
+}
+
+.card p {
+    color: #555;
+    font-size: 0.95rem;
+    margin-bottom: 20px;
+}
+
+.card a {
+    color: var(--accent-color);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+/* 自媒体关注（微信二维码排版） */
+.connect-tip {
+    margin-bottom: 25px;
+    color: #555;
+}
+
+.qr-container {
+    display: flex;
+    gap: 40px;
+    justify-content: flex-start;
+}
+
+.qr-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    width: 180px;
+}
+
+.qr-card img {
+    width: 140px;
+    height: 140px;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.qr-card p {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* 文章列表 */
+.article-list {
+    list-style: none;
+}
+
+.article-list li {
+    display: flex;
+    align-items: baseline;
+    padding: 15px 0;
+    border-bottom: 1px dashed var(--border-color);
+}
+
+.article-list .date {
+    font-family: monospace;
+    color: #888;
+    margin-right: 30px;
+    flex-shrink: 0;
+}
+
+.article-list a {
+    color: var(--text-color);
+    text-decoration: none;
+    font-size: 1.1rem;
+    transition: color 0.2s ease;
+}
+
+.article-list a:hover {
+    color: var(--accent-color);
+}
+
+/* 页脚 */
+footer {
+    text-align: center;
+    padding: 40px 20px;
+    color: #888;
+    font-size: 0.9rem;
+}
+
+/* ==========================================================================
+   3. 移动端响应式适配 (Responsive Media Queries)
+   ========================================================================== */
+@media (max-width: 768px) {
+    .navbar {
+        flex-direction: column;
+        gap: 15px;
+        padding: 15px 20px;
+    }
+    
+    .navbar nav a {
+        margin: 0 10px;
+        font-size: 0.9rem;
+    }
+
+    .hero h1 {
+        font-size: 2.2rem;
+    }
+
+    .about-container {
+        flex-direction: column;
+        text-align: center;
+        gap: 20px;
+    }
+
+    .qr-container {
+        justify-content: center;
+        gap: 20px;
+    }
+}
