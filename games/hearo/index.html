@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>勇者斗恶龙 - 全相对定位版</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #111;
+            font-family: 'Courier New', Courier, monospace, "Microsoft YaHei";
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #fff;
+            user-select: none;
+        }
+
+        #game-container {
+            width: 960px;
+            height: 540px;
+            background-image: url('bg_combat_forest_field.png');
+            background-size: 100% 100%;
+            position: relative;
+            border: 4px solid #3a2214;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            overflow: hidden;
+        }
+
+        #scene-title {
+            position: relative;
+            top: 36px;
+            margin: 0 auto;
+            width: 400px;
+            text-align: center;
+            color: #4a2e1b;
+            font-size: 18px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            z-index: 10;
+        }
+
+        #player-status {
+            position: absolute;
+            left: 150px;
+            top: 110px;
+        }
+
+        #hero-character {
+            position: absolute;
+            left: 170px;
+            top: 190px;
+            width: 130px;
+            height: auto;
+            image-rendering: pixelated;
+            z-index: 5;
+        }
+
+        #monster-status {
+            position: absolute;
+            right: 150px;
+            top: 110px;
+        }
+
+        #slime-character {
+            position: absolute;
+            right: 165px;
+            top: 185px;
+            width: 140px;
+            height: auto;
+            image-rendering: pixelated;
+            z-index: 5;
+            transform-origin: center;
+        }
+
+        @keyframes attack-flicker {
+            0%   { filter: brightness(1); transform: scale(1); }
+            15%  { filter: brightness(1.7) drop-shadow(0 0 10px rgba(255,255,255,0.9)); transform: scale(1.03); }
+            30%  { filter: brightness(1.2) drop-shadow(0 0 18px rgba(255,255,255,0.7)); transform: scale(1.06); }
+            45%  { filter: brightness(1.6) drop-shadow(0 0 12px rgba(255,255,255,0.8)); transform: scale(1.04); }
+            100% { filter: brightness(1); transform: scale(1); }
+        }
+
+        #hero-character.attack-hit,
+        #slime-character.attack-hit {
+            animation: attack-flicker 300ms ease;
+        }
+
+        .status-window {
+            background: rgba(0, 0, 0, 0.85);
+            border: 3px solid #d4af37;
+            border-radius: 6px;
+            padding: 8px 16px;
+            text-align: center;
+            min-width: 130px;
+            font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            z-index: 10;
+        }
+
+        #combat-log {
+            position: absolute;
+            bottom: 112px;
+            left: 245px;
+            width: 485px;
+            height: 92px;
+            overflow-y: auto;
+            padding: 6px 12px;
+            box-sizing: border-box;
+            color: #4a2e1b;
+            font-weight: bold;
+            font-size: 15px;
+            line-height: 1.6;
+            z-index: 10;
+        }
+
+        #combat-log::-webkit-scrollbar {
+            width: 0px;
+        }
+
+        .controls {
+            position: absolute;
+            bottom: 22px;
+            left: 153px;
+            width: 655px;
+            height: 56px;
+            z-index: 10;
+            font-size: 0;
+            white-space: nowrap;
+        }
+
+        .custom-btn {
+            position: relative;
+            display: inline-block;
+            width: 155px;
+            height: 100%;
+            background: transparent;
+            cursor: pointer;
+            color: transparent;
+            border-radius: 4px;
+            transition: background 0.15s ease;
+            box-sizing: border-box;
+            vertical-align: top;
+            margin-right: 11.5px;
+        }
+
+        .custom-btn:last-child {
+            margin-right: 0;
+        }
+
+        .custom-btn:hover {
+            background: rgba(212, 175, 55, 0.18);
+            box-shadow: inset 0 0 8px rgba(212, 175, 55, 0.3);
+        }
+
+        .custom-btn:active {
+            background: rgba(212, 175, 55, 0.28);
+        }
+
+        .custom-btn.disabled {
+            cursor: not-allowed;
+            background: rgba(0, 0, 0, 0.25);
+            pointer-events: none;
+            box-shadow: none;
+        }
+
+        #btn-attack {
+            top: -4px;
+            left: 24px;
+            width: 157px;
+        }
+
+        #btn-magic {
+            top: -4px;
+            left: 31px;
+            width: 165px;
+        }
+
+        #btn-item {
+            top: -4px;
+            left: 35px;
+            width: 153px;
+        }
+
+        #btn-run {
+            top: -4px;
+            left: 40px;
+            width: 137px;
+        }
+
+        #result-overlay {
+            position: absolute;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.72);
+            z-index: 30;
+        }
+
+        #result-overlay.show {
+            display: flex;
+        }
+
+        #result-box {
+            width: 320px;
+            padding: 24px 18px;
+            border: 3px solid #d4af37;
+            border-radius: 12px;
+            background: linear-gradient(180deg, rgba(17, 17, 17, 0.96), rgba(34, 24, 16, 0.96));
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+            text-align: center;
+            color: #fff6d6;
+        }
+
+        #result-title {
+            margin: 0 0 10px;
+            font-size: 26px;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        #result-text {
+            margin: 0 0 18px;
+            font-size: 15px;
+            line-height: 1.6;
+            color: #ffe8b5;
+        }
+
+        #restart-btn {
+            border: 2px solid #d4af37;
+            background: rgba(212, 175, 55, 0.12);
+            color: #fff7d8;
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        #restart-btn:hover {
+            background: rgba(212, 175, 55, 0.22);
+        }
+    </style>
+</head>
+<body>
+<div id="game-container">
+    <div id="scene-title">战斗中 (IN BATTLE) - 迷雾森林</div>
+    <div id="player-status" class="status-window">
+        <div style="color: #55ff55;">勇者 罗兰</div>
+        <div id="player-hp">HP: 120/120</div>
+    </div>
+    <img id="hero-character" src="hearo.png" alt="勇者">
+    <div id="monster-status" class="status-window">
+        <div style="color: #ff5555;">蓝色史莱姆</div>
+        <div id="monster-hp">HP: 45/45</div>
+    </div>
+    <img id="slime-character" src="slime.png" alt="怪物">
+    <div id="combat-log">
+        <p style="margin: 0;">你在原野上遭遇了 蓝色史莱姆！</p>
+    </div>
+    <div class="controls">
+        <div class="custom-btn" id="btn-attack" onclick="playerAction('attack')">攻击</div>
+        <div class="custom-btn" id="btn-magic" onclick="playerAction('magic')">魔法</div>
+        <div class="custom-btn" id="btn-item" onclick="playerAction('item')">道具</div>
+        <div class="custom-btn" id="btn-run" onclick="playerAction('run')">逃跑</div>
+    </div>
+    <div id="result-overlay">
+        <div id="result-box">
+            <h2 id="result-title">战斗结果</h2>
+            <p id="result-text">请继续战斗。</p>
+            <button id="restart-btn" onclick="resetBattle()">重新挑战</button>
+        </div>
+    </div>
+</div>
+<script>
+    const player = { name: '罗兰', hp: 120, maxHp: 120, atk: 16, def: 5 };
+    const monster = { name: '蓝色史莱姆', hp: 45, maxHp: 45, atk: 10, def: 2 };
+    let isPlayerTurn = true;
+
+    function logMessage(text) {
+        const logBox = document.getElementById('combat-log');
+        logBox.innerHTML += `<p style="margin: 4px 0;">▶ ${text}</p>`;
+        logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    function updateUI() {
+        document.getElementById('player-hp').innerText = `HP: ${player.hp}/${player.maxHp}`;
+        document.getElementById('monster-hp').innerText = `HP: ${monster.hp}/${monster.maxHp}`;
+    }
+
+    function showResult(title, text) {
+        document.getElementById('result-title').innerText = title;
+        document.getElementById('result-text').innerText = text;
+        document.getElementById('result-overlay').classList.add('show');
+    }
+
+    function resetBattle() {
+        player.hp = player.maxHp;
+        monster.hp = monster.maxHp;
+        isPlayerTurn = true;
+        updateUI();
+        setButtonsDisabled(false);
+        document.getElementById('combat-log').innerHTML = '<p style="margin: 0;">你在原野上遭遇了 蓝色史莱姆！</p>';
+        document.getElementById('result-overlay').classList.remove('show');
+    }
+
+    function setButtonsDisabled(disabled) {
+        const buttons = document.querySelectorAll('.custom-btn');
+        buttons.forEach(btn => {
+            if (disabled) btn.classList.add('disabled');
+            else btn.classList.remove('disabled');
+        });
+    }
+
+    function triggerAttackFlash(targetId) {
+        const target = document.getElementById(targetId);
+        if (!target) return;
+        target.classList.remove('attack-hit');
+        void target.offsetWidth;
+        target.classList.add('attack-hit');
+        setTimeout(() => target.classList.remove('attack-hit'), 320);
+    }
+
+    function playerAction(type) {
+        if (!isPlayerTurn || player.hp <= 0 || monster.hp <= 0) return;
+        setButtonsDisabled(true);
+
+        if (type === 'attack') {
+            let damage = player.atk - monster.def + Math.floor(Math.random() * 4);
+            if (damage <= 0) damage = 1;
+            monster.hp -= damage;
+            if (monster.hp < 0) monster.hp = 0;
+
+            logMessage('勇者 ' + player.name + ' 挥动武器斩击！造成了 ' + damage + ' 点伤害！');
+            triggerAttackFlash('slime-character');
+            updateUI();
+
+            if (monster.hp <= 0) {
+                logMessage('🎉 ' + monster.name + ' 被击败了！战斗胜利！');
+                showResult('胜利！', '你成功击败了蓝色史莱姆，战斗结束。');
+                setButtonsDisabled(true);
+                return;
+            }
+        } else {
+            logMessage('当前战斗只能执行 [攻击] 指令。');
+            setButtonsDisabled(false);
+            return;
+        }
+
+        isPlayerTurn = false;
+        setTimeout(monsterTurn, 1000);
+    }
+
+    function monsterTurn() {
+        if (monster.hp <= 0 || player.hp <= 0) return;
+
+        let damage = monster.atk - player.def + Math.floor(Math.random() * 3);
+        if (damage <= 0) damage = 1;
+        player.hp -= damage;
+        if (player.hp < 0) player.hp = 0;
+
+        logMessage('💥 ' + monster.name + ' 发动弹跳撞击！对你造成了 ' + damage + ' 点伤害！');
+        triggerAttackFlash('hero-character');
+        updateUI();
+
+        if (player.hp <= 0) {
+            logMessage('💀 勇者战死了…… 游戏结束。');
+            showResult('失败', '勇者罗兰被史莱姆击倒了，请重新挑战。');
+            setButtonsDisabled(true);
+            return;
+        }
+
+        isPlayerTurn = true;
+        setButtonsDisabled(false);
+    }
+
+    window.__forceFailure = function () {
+        player.hp = 0;
+        updateUI();
+        showResult('失败', '勇者罗兰被史莱姆击倒了，请重新挑战。');
+        setButtonsDisabled(true);
+    };
+</script>
+</body>
+</html>
